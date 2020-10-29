@@ -1,25 +1,40 @@
 class Player {
   
   PVector pos;
-  Ray[] rays;
+  ArrayList<Ray> rays;
   
   float degrees;
   
-  Player() {
-    this.pos = new PVector(width / 2, height / 2);
-    this.rays = new Ray[65];
-    for (int a = 0; a < this.rays.length; a += 1) {
-      this.rays[a] = new Ray(pos, radians(a));
-    }
+  float castRayEach = 0.2;
+  
+  int fov;
+  
+  Player(int fov) {
+    
+    pos = new PVector(width / 2, height / 2);
+  
+    setFov(fov);
+    
   }
 
   void move(float speed, Boundary[] boundaries) {
   
-    float newX = pos.x + cos(radians(degrees)) * speed;
+    float newX = pos.x + cos(radians(degrees + fov / 2)) * speed;
     if(!blocking(newX, pos.y, boundaries)) pos.set(newX, pos.y);
     
-    float newY = pos.y + sin(radians(degrees)) * speed;
+    float newY = pos.y + sin(radians(degrees + fov / 2)) * speed;
     if(!blocking(pos.x, newY, boundaries)) pos.set(pos.x, newY);
+    
+  }
+  
+  void setFov(int fov) {
+    
+    rays = new ArrayList();
+    this.fov = fov;
+   
+    for (float a = -this.fov / 2; a < this.fov / 2; a += castRayEach) {
+      this.rays.add(new Ray(pos, radians(a)));
+    }
     
   }
   
@@ -53,32 +68,57 @@ class Player {
       degrees = 0;
     }
     
-    for (int a = 0; a < this.rays.length; a += 1) {
-      this.rays[a].setAngle(radians(a) + radians(degrees));
+    int i = 0;
+    
+    for (float a = -this.fov / 2; a < this.fov / 2; a += castRayEach) {
+      this.rays.get(i).setAngle(radians(a) + radians(degrees));
+      i++;
     }
     
   }
 
-  void look(Boundary[] walls) {
-    for (int i = 0; i < this.rays.length; i++) {
-      Ray ray = this.rays[i];
+  float[] look(Boundary[] walls, boolean drawRays) {
+    
+   float[] scene = new float[this.rays.size()-1];
+    
+    for (int i = 0; i < this.rays.size()-1; i++) {
+      
+      Ray ray = this.rays.get(i);
       PVector closest = null;
       float record = 500000000;
+      
       for (Boundary wall : walls) {
+        
         PVector pt = ray.cast(wall);
+        
         if (pt != null) {
+          
           float d = PVector.dist(this.pos, pt);
+          
+          float a = ray.dir.heading() - radians(degrees);
+          
+          d *= cos(a);
+          
           if (d < record) {
             record = d;
             closest = pt;
           }
+          
         }
+        
       }
-      if (closest != null) {
+      
+      if (closest != null && drawRays) {
         stroke(255, 100);
         line(this.pos.x, this.pos.y, closest.x, closest.y);
       }
+      
+      scene[i] = record;
+      
     }
+    
+    return scene;
+    
   }
 
   void show() {

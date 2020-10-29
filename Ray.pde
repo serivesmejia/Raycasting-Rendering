@@ -3,13 +3,17 @@ class Ray {
   
   PVector pos, dir;
   
+  float angle;
+  
   Ray(PVector _pos, float angle) {
     this.pos = _pos;
     this.dir = PVector.fromAngle(angle);
+    this.angle = angle;
   }
 
   void setAngle(float angle) {
     dir = PVector.fromAngle(angle);
+    this.angle = angle;
   }
 
   void lookAt(float x, float y) {
@@ -46,6 +50,7 @@ class Ray {
 
     float t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den;
     float u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / den;
+    
     if (t > 0 && t < 1 && u > 0) {
       PVector pt = new PVector();
       pt.x = x1 + t * (x2 - x1);

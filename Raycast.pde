@@ -12,6 +12,11 @@ boolean downDown = false;
 
 boolean mouseStuck = false;
 
+int fov = 65;
+
+boolean drawBoundariesRays = false;
+boolean drawScene = true;
+
 void setup() {
   
   size(800, 600);
@@ -30,7 +35,7 @@ void setup() {
   walls[walls.length-2] = (new Boundary(width, height, 0, height));
   walls[walls.length-1] = (new Boundary(0, height, 0, 0));
   
-  player = new Player();
+  player = new Player(fov);
   
   try {
     robot = new Robot();
@@ -45,12 +50,43 @@ void draw() {
   
   background(0);
   
-  for (Boundary wall : walls) {
-    wall.show();
+  if(drawBoundariesRays) {
+    
+    for (Boundary wall : walls) {
+      wall.show();
+    }
+  
+    player.show();
+    
   }
+  
+  float[] scene = player.look(walls, drawBoundariesRays);
+  
+  float w = width / scene.length;
+  
+  push();
+  
+  for(int i = 0 ; i < scene.length ; i++) {
+   
+    float record = scene[i];
+ 
+    float ssq = record*record;
 
-  player.show();
-  player.look(walls);
+    float wsq = width * width;
+    
+    float b = map(ssq, 0, wsq, 255, 0);
+    float h = height * player.fov / record;
+    
+    noStroke();
+    
+    rectMode(CENTER);
+    
+    fill(b);
+    rect(i * w + w / 2, height / 2, w + 1, h);
+    
+  }
+  
+  pop();
   
 }
 
